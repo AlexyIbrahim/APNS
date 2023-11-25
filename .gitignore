@@ -293,3 +293,5 @@ main_private.py
 playground.py
 
 .DS_Store
+
+playbook.yml

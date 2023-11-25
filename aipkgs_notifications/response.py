@@ -19,7 +19,7 @@ class APNSResponse:
         self.timestamp = Time(int(timestamp) * 1000) if timestamp else None
 
     @property
-    def is_sent(self) -> bool:
+    def is_success(self) -> bool:
         return self.httpx_response.is_success
 
 
