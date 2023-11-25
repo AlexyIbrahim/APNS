@@ -62,7 +62,7 @@ class SoundPayload:
 
 
 class Payload:
-    def __init__(self, alert: AlertPayload, category: str = None, sound: SoundPayload = None, badge: int = None, data: dict = None, thread_id: str = None,
+    def __init__(self, alert: AlertPayload = None, category: str = None, sound: SoundPayload = None, badge: int = None, data: dict = None, thread_id: str = None,
                  content_available: bool = None, mutable_content: bool = None, target_content_id: str = None,
                  target_content_type: str = None, target_content_url: str = None, interruption_level: enums.InterruptionLevel = None, relevance_score: int = None,
                  filter_criteria: str = None,
@@ -88,7 +88,7 @@ class Payload:
         self.dismissal_date = dismissal_date
 
     def to_dict(self) -> dict:
-        data = {"aps": {"alert": self.alert.to_dict(),
+        data = {"aps": {"alert": self.alert.to_dict() if self.alert else None,
                         "category": self.category,
                         "sound": self.sound.to_dict() if self.sound else {"name": "default"},
                         "badge": self.badge,

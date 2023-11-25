@@ -67,7 +67,19 @@ class APNS:
 
     def __generate_auth_token(self, expires: int = None) -> str:
         if self.AUTH_TOKEN:
-            return self.AUTH_TOKEN
+            if expires:
+                token_expired = True
+                now = time.time()
+                decoded_token = jwt.decode(self.AUTH_TOKEN, verify=False)
+                if (decoded_token['exp'] - now) > 60:  # check if 60 seconds is left, consider it expired
+                    token_expired = True
+                elif decoded_token['exp'] > time.time():
+                    token_expired = False
+                if decoded_token['exp'] < time.time():
+                    token_expired = True
+
+                if token_expired is False:
+                    return self.AUTH_TOKEN
 
         with open(self.AUTH_P8_KEY, 'r') as file:
             private_key = file.read()
