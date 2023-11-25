@@ -118,13 +118,17 @@ class APNS:
         if self.authentication_method == enums.AuthenticationMethod.P8:
             auth_token = self.__generate_auth_token(expires=None)
 
+        bundle_id = self.BUNDLE_ID
+        if push_type == enums.PushType.push_to_talk:
+            bundle_id = f"{bundle_id}.voip-ptt"
+
         # headers
         headers = {
             "apns-id": str(uuid.uuid4()),
             "apns-push-type": push_type.value if push_type else enums.PushType.alert.value,
             "apns-expiration": self.APNS_EXPIRATION,
             "apns-priority": self.APNS_PRIORITY,
-            "apns-topic": self.BUNDLE_ID,
+            "apns-topic": bundle_id,
             "apns-collapse-id": collapse_id,
             "apns-unix-time": str(int(time.time())),
         }
@@ -142,14 +146,14 @@ class APNS:
         # send request
         response = None
         if self.authentication_method == enums.AuthenticationMethod.P8:
-            client = httpx.Client(http2=True, cert=self.AUTH_PEM_KEY)
+            client = httpx.Client(http2=True)
             response = client.post(
                 FULL_URL,
                 headers=headers,
                 json=payload.to_dict(),
             )
         elif self.authentication_method == enums.AuthenticationMethod.PEM:
-            client = httpx.Client(http2=True)
+            client = httpx.Client(http2=True, cert=self.AUTH_PEM_KEY)
             response = client.post(
                 FULL_URL,
                 headers=headers,

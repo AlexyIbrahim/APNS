@@ -9,6 +9,7 @@ class PushType(enum.Enum):
     file_provider = "fileprovider"
     mdm = "mdm"
     unknown = "unknown"
+    push_to_talk = "pushtotalk"
 
 
 class AuthenticationMethod(enum.Enum):

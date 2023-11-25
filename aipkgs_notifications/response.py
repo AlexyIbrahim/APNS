@@ -18,8 +18,9 @@ class APNSResponse:
         self.apns_unique_id = headers.get('apns-unique-id', None)
         self.timestamp = Time(int(timestamp) * 1000) if timestamp else None
 
+    @property
     def is_sent(self) -> bool:
-        return self.status_code == 200
+        return self.httpx_response.is_success
 
 
 class Time:
