@@ -1,33 +1,17 @@
-import enum
 import json
 import time
 import uuid
-from pprint import pprint
-
 import httpx
 import jwt
+import aipkgs_notifications.singleton as singleton
+import aipkgs_notifications.utils as utils
+import aipkgs_notifications.response as ai_response
+import aipkgs_notifications.payload as ai_payload
+import aipkgs_notifications.enums as enums
 
-from aipkgs_notifications.Singleton import Singleton
-from aipkgs_notifications import utils
-from aipkgs_notifications.response import APNSResponse
 
 APNS_HOST_URL_SANDBOX = "https://api.sandbox.push.apple.com"
 APNS_HOST_URL_PROD = "https://api.push.apple.com"
-
-
-class PushType(enum.Enum):
-    alert = "alert"
-    background = "background"
-    voip = "voip"
-    complication = "complication"
-    file_provider = "fileprovider"
-    mdm = "mdm"
-    unknown = "unknown"
-
-
-class AuthenticationMethod(enum.Enum):
-    P8 = "p8"  # you get the AuthKey.p8 file from the Apple Developer Portal
-    PEM = "pem"  # convert the exported .p12 file to .pem file using 'openssl pkcs12 -clcerts -legacy -nodes -in Certificates.p12 -out AuthKey.pem'
 
 
 class Config:
@@ -35,7 +19,7 @@ class Config:
         self.verbose = verbose or False
 
 
-@Singleton
+@singleton.Singleton
 class APNS:
     def __init__(self, key_id: str = '', team_id: str = '', bundle_id: str = '', is_prod: bool = None, p8_key_path: str = '', pem_file_path: str = '', apns_priority: int = None,
                  apns_expiration: int = None):
@@ -63,11 +47,11 @@ class APNS:
         # assert self.AUTH_P8_KEY or self.AUTH_PEM_KEY, "AUTH_P8_KEY or AUTH_PEM_KEY is null or empty"
 
     @property
-    def authentication_method(self) -> AuthenticationMethod:
+    def authentication_method(self) -> enums.AuthenticationMethod:
         if self.AUTH_P8_KEY:
-            return AuthenticationMethod.P8
+            return enums.AuthenticationMethod.P8
         elif self.AUTH_PEM_KEY:
-            return AuthenticationMethod.PEM
+            return enums.AuthenticationMethod.PEM
         else:
             return None
 
@@ -112,20 +96,20 @@ class APNS:
 
         return token
 
-    def push(self, device_token: str, title: str, body: str = None, data: dict = None, badge: int = None, push_type: PushType = None, collapse_id: str = None) -> APNSResponse:
+    def push(self, device_token: str, payload: ai_payload.Payload, push_type: enums.PushType = None, collapse_id: str = None) -> ai_response.APNSResponse:
         if self.authentication_method is None:
             raise Exception("Authentication method is not defined")
 
         FULL_URL = f"{self.APNS_HOST_URL}/3/device/{device_token}"
 
         auth_token = None
-        if self.authentication_method == AuthenticationMethod.P8:
+        if self.authentication_method == enums.AuthenticationMethod.P8:
             auth_token = self.__generate_auth_token(expires=None)
 
         # headers
         headers = {
             "apns-id": str(uuid.uuid4()),
-            "apns-push-type": push_type.value if push_type else PushType.alert.value,
+            "apns-push-type": push_type.value if push_type else enums.PushType.alert.value,
             "apns-expiration": self.APNS_EXPIRATION,
             "apns-priority": self.APNS_PRIORITY,
             "apns-topic": self.BUNDLE_ID,
@@ -134,11 +118,6 @@ class APNS:
         }
         if auth_token:
             headers["authorization"] = f"bearer {auth_token}"
-
-        # payload
-        from aipkgs_notifications.payload import Payload, AlertPayload
-        alert_payload = AlertPayload(title=title, body=body)
-        payload = Payload(alert=alert_payload, badge=badge, data=data, push_type=push_type)
 
         headers = utils.remove_nulls(headers)
 
@@ -150,14 +129,14 @@ class APNS:
 
         # send request
         response = None
-        if self.authentication_method == AuthenticationMethod.P8:
+        if self.authentication_method == enums.AuthenticationMethod.P8:
             client = httpx.Client(http2=True, cert=self.AUTH_PEM_KEY)
             response = client.post(
                 FULL_URL,
                 headers=headers,
                 json=payload.to_dict(),
             )
-        elif self.authentication_method == AuthenticationMethod.PEM:
+        elif self.authentication_method == enums.AuthenticationMethod.PEM:
             client = httpx.Client(http2=True)
             response = client.post(
                 FULL_URL,
@@ -165,7 +144,7 @@ class APNS:
                 json=payload.to_dict(),
             )
 
-        apns_response = APNSResponse(httpx_response=response)
+        apns_response = ai_response.APNSResponse(httpx_response=response)
 
         if self.config.verbose:
             print(f"is_sent: {apns_response.is_sent()}")
@@ -187,5 +166,12 @@ def initialize_apns(key_id='', team_id='', bundle_id='', is_prod: bool = None, p
     return APNS.shared
 
 
-def push(device_token: str, title: str, body: str = None, data: dict = None, badge: int = None, push_type: PushType = None, collapse_id: str = None) -> APNSResponse:
-    return APNS.shared.push(device_token=device_token, title=title, body=body, data=data, badge=badge, push_type=push_type, collapse_id=collapse_id)
+def push_raw(device_token: str, payload: ai_payload.Payload, push_type: enums.PushType = None, collapse_id: str = None) -> ai_response.APNSResponse:
+    return APNS.shared.push(device_token=device_token, payload=payload, push_type=push_type, collapse_id=collapse_id)
+
+
+def push(device_token: str, title: str, body: str = None, data: dict = None, badge: int = None, push_type: enums.PushType = None, collapse_id: str = None) -> ai_response.APNSResponse:
+    alert_payload = ai_payload.AlertPayload(title=title, body=body)
+    payload = ai_payload.Payload(alert=alert_payload, badge=badge, data=data)
+
+    return push_raw(device_token=device_token, payload=payload, collapse_id=collapse_id)

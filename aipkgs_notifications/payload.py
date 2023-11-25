@@ -1,21 +1,5 @@
-import enum
-from aipkgs_notifications import utils, apns
-
-
-class InterruptionLevel(enum.Enum):
-    active = "active"
-    time_sensitive = "time-sensitive"
-    critical = "critical"
-
-    def __str__(self):
-        if self == InterruptionLevel.active:
-            return "Active"
-        elif self == InterruptionLevel.time_sensitive:
-            return "Time Sensitive"
-        elif self == InterruptionLevel.critical:
-            return "Critical"
-        else:
-            return "n/a"
+import aipkgs_notifications.enums as enums
+import aipkgs_notifications.utils as utils
 
 
 class AlertPayload:
@@ -78,9 +62,9 @@ class SoundPayload:
 
 
 class Payload:
-    def __init__(self, alert: AlertPayload, category: str = None, sound: SoundPayload = None, badge: int = None, data: dict = None,
-                 push_type: apns.PushType = None, thread_id: str = None, content_available: bool = None, mutable_content: bool = None, target_content_id: str = None,
-                 target_content_type: str = None, target_content_url: str = None, interruption_level: InterruptionLevel = None, relevance_score: int = None,
+    def __init__(self, alert: AlertPayload, category: str = None, sound: SoundPayload = None, badge: int = None, data: dict = None, thread_id: str = None,
+                 content_available: bool = None, mutable_content: bool = None, target_content_id: str = None,
+                 target_content_type: str = None, target_content_url: str = None, interruption_level: enums.InterruptionLevel = None, relevance_score: int = None,
                  filter_criteria: str = None,
                  stale_date: str = None, content_state: dict = None, timestamp: int = None, event: str = None, dismissal_date: int = None):
         self.alert = alert
@@ -88,7 +72,6 @@ class Payload:
         self.sound = sound
         self.badge = badge
         self.data = data
-        self.push_type = push_type or apns.PushType.alert
         self.thread_id = thread_id
         self.content_available = content_available
         self.mutable_content = mutable_content
