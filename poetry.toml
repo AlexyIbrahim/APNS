@@ -1,0 +1,9 @@
+[repositories]
+[repositories.aipkgs]
+url = "https://gitlab.com/api/v4/projects/32501635/packages/pypi"
+
+[http-basic]
+[http-basic.aipkgs]
+username = "token"
+password = "glpat-c9hXXJnH1Pny4zD7nyop"
+
