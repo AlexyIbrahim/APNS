@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aipkgs-notifications"
-version = "0.0.25"
+version = "0.0.26"
 description = ""
 authors = ["Alexy <alexy.ib@outlook.com>"]
 license = "MIT"
