@@ -1,4 +1,4 @@
-from aipkgs_notifications import apns
+from aipkgs_notifications import ns
 from aipkgs_notifications.response import APNSResponse
 
 if __name__ == '__main__':
@@ -15,15 +15,15 @@ if __name__ == '__main__':
     assert TEAM_ID, "TEAM_ID is null or empty"
     assert BUNDLE_ID, "BUNDLE_ID is null or empty"
 
-    apns.initialize_apns(key_id=KEY_ID,
-                         team_id=TEAM_ID,
-                         bundle_id=BUNDLE_ID,
-                         is_prod=IS_PROD,
-                         p8_key_path=P8_KEY_PATH,
-                         pem_file_path=PEM_FILE_PATH,
-                         apns_priority=APNS_PRIORITY,
-                         apns_expiration=APNS_EXPIRATION,)
-    apns.config().verbose = True
+    ns.initialize_apns(key_id=KEY_ID,
+                       team_id=TEAM_ID,
+                       bundle_id=BUNDLE_ID,
+                       is_prod=IS_PROD,
+                       p8_key_path=P8_KEY_PATH,
+                       pem_file_path=PEM_FILE_PATH,
+                       apns_priority=APNS_PRIORITY,
+                       apns_expiration=APNS_EXPIRATION, )
+    ns.apns_config().verbose = True
 
     device_token = ""
     data = {}
@@ -32,4 +32,4 @@ if __name__ == '__main__':
     assert device_token, "device_token is null or empty"
     assert title, "title is null or empty"
 
-    response: APNSResponse = apns.push(device_token=device_token, title=title, data=data, badge=None, push_type=apns.PushType.alert, collapse_id=None)
+    response: APNSResponse = ns.push(device_token=device_token, title=title, data=data, badge=None, push_type=ns.PushType.alert, collapse_id=None)

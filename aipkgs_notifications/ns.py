@@ -1,6 +1,9 @@
 import json
 import time
 import uuid
+from typing import Optional
+
+import firebase_admin
 import httpx
 import jwt
 import aipkgs_notifications.singleton as singleton
@@ -163,7 +166,7 @@ class APNS:
         apns_response = ai_response.APNSResponse(httpx_response=response)
 
         if self.config.verbose:
-            print(f"is_sent: {apns_response.is_sent()}")
+            print(f"is_success: {apns_response.is_success}")
             print(f"status_code: {apns_response.status_code}")
             print(f"apns_id: {apns_response.apns_id}")
             print(f"apns_unique_id:  {apns_response.apns_unique_id}")
@@ -172,8 +175,8 @@ class APNS:
         return apns_response
 
 
-def config() -> Config:
-    return APNS.shared.config
+def apns_config() -> Config:
+    return APNS.shared.apns_config
 
 
 def initialize_apns(key_id='', team_id='', bundle_id='', is_prod: bool = None, p8_key_path='', pem_file_path='', apns_priority: int = None, apns_expiration: int = None):
@@ -191,3 +194,38 @@ def push(device_token: str, title: str, body: str = None, data: dict = None, bad
     payload = ai_payload.Payload(alert=alert_payload, badge=badge, data=data)
 
     return push_raw(device_token=device_token, payload=payload, collapse_id=collapse_id)
+
+
+@singleton.Singleton
+class FirebaseSession:
+    def __init__(self):
+        self.__json_credentials_path = None
+        self.__firebase_app: Optional[firebase_admin.App] = None
+        self.__db: Optional[firebase_admin.firestore.firestore.Client] = None
+
+    @property
+    def firebase_app(self) -> Optional[firebase_admin.App]:
+        return self.__firebase_app
+
+    @property
+    def firebase_db(self) -> Optional[firebase_admin.firestore.firestore.Client]:
+        return self.__db
+
+    # region client
+    def __initialize_firebase(self, json_credentials_path: str):
+        if (self.__firebase_app is not None) \
+                and (self.__json_credentials_path == json_credentials_path):
+            return
+
+        self.__json_credentials_path = json_credentials_path
+        cred = firebase_admin.credentials.Certificate(self.__json_credentials_path)
+        self.__firebase_app = firebase_admin.initialize_app(cred, {'storageBucket': 'instant-9101b.appspot.com'})
+        self.__db = firebase_admin.firestore.client()
+
+    def initialize_firebase(self, json_credentials_path: str):
+        self.__initialize_firebase(json_credentials_path=json_credentials_path)
+
+
+def initialize_firebase(json_credentials_path: str) -> firebase_admin.App:
+    FirebaseSession.shared.initialize_firebase(json_credentials_path=json_credentials_path)
+    return FirebaseSession.shared.firebase_app

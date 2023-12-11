@@ -17,11 +17,11 @@ import apns
 Then, initialize the APNS with your application's details:
 
 ```python
-KEY_ID = ''  
-TEAM_ID = ''  
+KEY_ID = ''
+TEAM_ID = ''
 BUNDLE_ID = 'com.test.app'
 IS_PROD = False
-P8_KEY_PATH = 'path/to/p8/key'  
+P8_KEY_PATH = 'path/to/p8/key'
 PEM_FILE_PATH = 'path/to/pem/file'
 APNS_PRIORITY = 10
 APNS_EXPIRATION = 0
@@ -35,7 +35,7 @@ apns.initialize_apns(key_id=KEY_ID,
                      apns_priority=APNS_PRIORITY,
                      apns_expiration=APNS_EXPIRATION)
 
-apns.config().verbose = True
+apns.apns_config().verbose = True
 ```
 
 Now, you can send a push notification:

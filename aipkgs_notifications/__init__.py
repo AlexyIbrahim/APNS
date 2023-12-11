@@ -1,1 +1,1 @@
-import aipkgs_notifications.apns as ai_notifications
+import aipkgs_notifications.ns as ai_notifications
